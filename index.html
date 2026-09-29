@@ -1,0 +1,880 @@
+<!doctype html>
+<html lang="hu">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1E8A3A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Reizdarm">
+<title>Reizdarm Étrend</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: zöld "hero" fejléc nagy kalóriagyűrűvel, alatta ráúszó fehér kártyák, alul ikonos fülsor. Elimináció = friss zöld, reintrodukció = borostyán. */
+:root{
+  --bg:#F2F4F1; --surface:#FFFFFF; --ink:#1A211C; --muted:#6A736C; --line:#E4E8E3; --track:#E3E7E2;
+  --hero:#1E8A3A; --hero-2:#177030; --on-hero:#FFFFFF;
+  --elim:#1E8A3A; --elim-soft:#E2F3E5; --reint:#C07A12; --reint-soft:#FBEBD2;
+  --done:#1E8A3A; --focus:#1F5FA8; --shadow:0 2px 14px rgba(20,40,25,.07);
+  --f-display:"DM Serif Display", Georgia, "Times New Roman", serif;
+  --f-body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r:18px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1210; --surface:#171D19; --ink:#E7EEE8; --muted:#98A39B; --line:#28302A; --track:#2B342D;
+  --hero:#155E29; --hero-2:#0F4A20; --on-hero:#F1FFF3;
+  --elim:#4DC46C; --elim-soft:#1B3322; --reint:#E7A74B; --reint-soft:#3A2C16;
+  --done:#4DC46C; --focus:#7FB2F0; --shadow:0 2px 14px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1210; --surface:#171D19; --ink:#E7EEE8; --muted:#98A39B; --line:#28302A; --track:#2B342D;
+  --hero:#155E29; --hero-2:#0F4A20; --on-hero:#F1FFF3;
+  --elim:#4DC46C; --elim-soft:#1B3322; --reint:#E7A74B; --reint-soft:#3A2C16;
+  --done:#4DC46C; --focus:#7FB2F0; --shadow:0 2px 14px rgba(0,0,0,.35); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:0 110px}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+h1{font-family:var(--f-display);font-weight:400;font-size:1.7rem}
+h2{font-family:var(--f-display);font-weight:400;font-size:1.55rem}
+h3{font-size:1.02rem;font-weight:700}
+p{margin:0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+.eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;font-weight:600;color:var(--muted)}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spread{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.num{font-variant-numeric:tabular-nums}
+.sec-title{font-family:var(--f-display);font-size:1.55rem;font-weight:400;margin-top:8px}
+
+/* zöld fejléc */
+.hero{background:radial-gradient(120% 90% at 85% 0%,rgba(255,255,255,.12),transparent 55%),radial-gradient(90% 70% at 0% 100%,rgba(0,0,0,.12),transparent 60%),var(--hero);color:var(--on-hero);padding-inline:16px;padding-block:14px 70px}
+.hero.slim{padding-block:14px 56px}
+.hero-in{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.topbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.topbar .brand{font-family:var(--f-display);font-size:1.45rem;line-height:1;white-space:nowrap}
+.topbar .r{justify-self:end}
+.hbtn{display:inline-flex;align-items:center;gap:6px;background:none;border:0;color:var(--on-hero);font-weight:600;cursor:pointer;padding:6px 0}
+.hbtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hbtn:disabled{opacity:.35;cursor:default}
+.ringrow{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.ringrow .side{text-align:center}
+.ringrow .side b{display:block;font-family:var(--f-display);font-weight:400;font-size:2rem;line-height:1.1}
+.ringrow .side span{font-size:.85rem;opacity:.85}
+.ring{position:relative;width:min(58vw,220px);aspect-ratio:1;max-width:100%}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.ring .c b{font-family:var(--f-display);font-weight:400;font-size:clamp(2.6rem,11vw,3.6rem);line-height:1}
+.ring .c span{font-size:.95rem;opacity:.9}
+.daynav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.daynav .t{text-align:center;font-weight:600}
+.daynav .t small{display:block;font-weight:500;opacity:.8}
+.hpill{display:inline-block;background:rgba(255,255,255,.18);border-radius:999px;padding:2px 10px;font-size:.75rem;font-weight:600}
+.lift{margin-top:-52px}
+
+.card{background:var(--surface);border-radius:var(--r);padding:18px;box-shadow:var(--shadow)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.pill.elim{background:var(--elim-soft);color:var(--elim)}
+.pill.reint{background:var(--reint-soft);color:var(--reint)}
+.pill.plain{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+
+/* 6 hetes rács */
+.grid6{display:grid;grid-template-columns:3.2em repeat(7,1fr);gap:5px;align-items:center}
+.grid6 .h{font-size:.7rem;color:var(--muted);text-align:center;font-weight:600}
+.grid6 .wl{font-size:.75rem;color:var(--muted);font-weight:600}
+.cell{height:36px;border-radius:8px;border:1.5px solid transparent;cursor:pointer;position:relative;
+  display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:600;padding:0}
+.cell.elim{background:var(--elim-soft);color:var(--elim)}
+.cell.reint{background:var(--reint-soft);color:var(--reint)}
+.cell.done.elim{background:var(--elim);color:var(--surface)}
+.cell.done.reint{background:var(--reint);color:var(--surface)}
+.cell.part::after{content:"";position:absolute;left:20%;right:20%;bottom:4px;height:3px;border-radius:2px;background:currentColor;opacity:.6}
+.cell.today{border-color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--elim);border-color:var(--elim);color:#fff}
+.cell.sel{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--focus)}
+.cell .tdot{position:absolute;top:3px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--reint)}
+.cell.done .tdot{background:var(--surface)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.75rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.bar>span{display:block;height:100%;background:var(--done);border-radius:4px}
+
+/* nap nézet */
+.dayhead{display:flex;align-items:center;gap:10px}
+.dayhead .t{flex:1;min-width:0}
+.iconbtn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;flex:none}
+.iconbtn:disabled{opacity:.35;cursor:default}
+.meal{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:12px 0;border-top:1px solid var(--line)}
+.meal:first-child{border-top:0;padding-top:2px}
+.meal .lbl{grid-column:2;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.meal input{grid-row:1/span 3;margin-top:18px}
+.meal .body{grid-column:2;min-width:0}
+.meal.checked .dish{text-decoration:line-through;text-decoration-color:var(--muted);opacity:.7}
+.dish{background:none;border:0;padding:0;text-align:left;cursor:pointer;font-weight:600;font-size:1.02rem;color:var(--ink);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.dish:hover{text-decoration-color:var(--elim)}
+.ingline{font-size:.83rem;color:var(--muted);margin-top:2px}
+input[type=checkbox]{width:22px;height:22px;accent-color:var(--done);cursor:pointer;margin:0}
+.test{background:var(--reint-soft);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.test .eyebrow{color:var(--reint)}
+.kcal{font-family:var(--f-display);font-size:1.4rem;font-weight:700}
+textarea{width:100%;min-height:80px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;padding:10px;resize:vertical}
+input[type=date],input[type=search]{border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;padding:7px 10px}
+
+/* hét nézet */
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.chip{border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow);border-radius:999px;padding:6px 14px;cursor:pointer;font-weight:600;font-size:.88rem;white-space:nowrap}
+
+.chip .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:1px}
+.wday{display:grid;grid-template-columns:4.2rem 1fr;gap:12px;padding:14px 0;border-top:1px solid var(--line)}
+.wday:first-child{border-top:0;padding-top:0}
+.wday .dn{font-family:var(--f-display);font-weight:400;font-size:1.3rem}
+.wday .dn button{background:none;border:0;padding:0;cursor:pointer;font:inherit;color:inherit;text-align:left}
+.wmeals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px}
+.wmeals .m{min-width:0}
+.wmeals .m .eyebrow{font-size:.65rem}
+.wmeals .dish{font-size:.9rem;font-weight:500}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stat{background:var(--bg);border-radius:10px;padding:10px 12px}
+.stat b{display:block;font-family:var(--f-display);font-weight:400;font-size:1.6rem}
+.kbar{display:flex;align-items:flex-end;gap:6px;height:84px;padding-top:4px}
+.kbar .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.kbar .col span{width:100%;max-width:34px;border-radius:5px 5px 2px 2px;background:var(--elim)}
+.kbar.reint .col span{background:var(--reint)}
+.kbar .col small{font-size:.68rem;color:var(--muted)}
+
+/* receptek */
+.rlist{display:flex;flex-direction:column}
+.ritem{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line);background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;cursor:pointer;width:100%}
+.ritem:first-child{border-top:0}
+.ritem .n{font-weight:600}
+.ritem:hover .n{color:var(--elim)}
+
+/* bevásárlás */
+.cat{display:flex;flex-direction:column}
+.shop{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:9px 0;border-top:1px solid var(--line);cursor:pointer}
+.shop:first-of-type{border-top:0}
+.shop .amt{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.shop .amt small{display:block;font-weight:400;color:var(--muted);font-size:.75rem}
+.shop.got .nm,.shop.got .amt{opacity:.45;text-decoration:line-through}
+.linkbtn{background:none;border:0;padding:0;color:var(--elim);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;cursor:pointer;font-weight:600}
+
+/* recept lap */
+.sheet-bg{position:fixed;inset:0;background:rgba(10,20,18,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);color:var(--ink);width:100%;max-width:640px;max-height:88vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:20px 18px calc(24px + env(safe-area-inset-bottom,0px))}
+@media (min-width:700px){.sheet-bg{align-items:center}.sheet{border-radius:20px;max-height:84vh}}
+.ing{width:100%;border-collapse:collapse}
+.ing td{padding:7px 0;border-top:1px solid var(--line);vertical-align:top}
+.ing tr:first-child td{border-top:0}
+.ing td.q{text-align:right;white-space:nowrap;font-weight:600;font-variant-numeric:tabular-nums;padding-left:12px}
+ol.steps{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:8px}
+ol.steps li::marker{font-family:var(--f-display);font-weight:700;color:var(--elim)}
+.occ{display:flex;gap:6px;flex-wrap:wrap}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
+.seg button{border:0;background:none;border-radius:9px;padding:8px 6px;cursor:pointer;font-weight:600;font-size:.85rem;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.kbox{background:var(--bg);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
+#kcalIn{width:6.5em;font-family:var(--f-display);font-size:1.3rem;font-weight:700}
+.qin{display:inline-flex;align-items:center;gap:6px}
+.qin .u{width:3.2em;text-align:left;color:var(--muted);font-weight:500;font-size:.85rem}
+input[type=number]{border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;padding:6px 8px;width:5.2em;text-align:right;font-variant-numeric:tabular-nums}
+input[type=number].mod{border-color:var(--reint);background:var(--reint-soft)}
+.savebar{position:sticky;bottom:calc(-24px - env(safe-area-inset-bottom,0px));margin-inline:-18px;padding:12px 18px calc(12px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;z-index:1}
+.btn.primary{background:var(--elim);border-color:var(--elim);color:var(--surface)}
+.btn:disabled{opacity:.45;cursor:default}
+.warn{color:var(--reint);font-weight:600}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--surface);padding:10px 18px;border-radius:999px;font-weight:600;font-size:.9rem;z-index:30}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.burnrow{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.burnrow:first-child{border-top:0;padding-top:0}
+.burnrow .tx{flex:1;min-width:0}
+.xbtn{width:30px;height:30px;border-radius:50%;border:0;background:var(--track);cursor:pointer;font-size:1.1rem;line-height:1;color:var(--muted)}
+.burnform{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.burnform input[type=text]{flex:1;min-width:140px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;padding:7px 10px}
+.pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.pgrid label{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:.9rem}
+.pgrid input[type=number]{width:100%}
+.pgrid .qin{display:flex}
+.seg label{display:block;cursor:pointer}
+.seg label input{position:absolute;opacity:0;pointer-events:none}
+.seg label span{display:block;text-align:center;border-radius:9px;padding:8px 6px;font-weight:600;font-size:.9rem;color:var(--muted)}
+.seg label input:checked+span{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.seg label input:focus-visible+span{outline:2px solid var(--focus)}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+.acts{display:flex;flex-direction:column;gap:8px}
+.acts legend{margin-bottom:8px}
+.act{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:12px;cursor:pointer}
+.act input{margin-top:3px;accent-color:var(--elim);width:18px;height:18px}
+.act:has(input:checked){border-color:var(--elim);background:var(--elim-soft)}
+.kbtn{background:none;border:1px solid var(--line);border-radius:999px;padding:2px 9px;cursor:pointer;font-size:.72rem;font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0}
+.kbtn:hover{border-color:var(--elim);color:var(--elim)}
+
+/* makrók, sorok */
+.macros{display:grid;grid-template-columns:1fr 1fr;gap:14px 26px}
+.macro .lb{font-size:.92rem;margin-bottom:6px}
+.macro .lb b{font-weight:600}
+.pbar{height:7px;border-radius:4px;background:var(--track);overflow:hidden}
+.pbar>span{display:block;height:100%;border-radius:4px;background:var(--elim)}
+.pbar.over>span{background:var(--reint)}
+.linkrow{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid var(--line);background:none;border-left:0;border-right:0;border-bottom:0;width:100%;text-align:left;cursor:pointer;color:var(--ink)}
+.linkrow svg.i{width:22px;height:22px;stroke:var(--elim);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.linkrow.reint svg.i{stroke:var(--reint)}
+.linkrow .tx{flex:1;min-width:0}
+.linkrow .chev{color:var(--elim);font-size:1.3rem;line-height:1}
+.mealcard{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px;display:grid;grid-template-columns:auto 1fr auto;gap:4px 14px;align-items:start;cursor:pointer}
+.mealcard input{margin-top:3px}
+.mealcard .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.mealcard .body{min-width:0}
+.mealcard.checked{opacity:.75}
+.mealcard.checked .dish{text-decoration:line-through;text-decoration-color:var(--muted)}
+.mealcard .kc{text-align:right}
+.mealcard .kc b{display:block;font-family:var(--f-display);font-weight:400;font-size:1.35rem;line-height:1.1}
+
+/* fülsor */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--surface);box-shadow:0 -2px 14px rgba(0,0,0,.06);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs .in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr)}
+nav.tabs a{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0 12px;color:var(--ink);text-decoration:none;font-size:.7rem;font-weight:500;min-width:0}
+nav.tabs a svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs a[aria-current="page"]{color:var(--elim)}
+ul.tips{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:8px}
+.phase{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start}
+.phase .sw{width:12px;height:100%;min-height:40px;border-radius:6px}
+@media (max-width:420px){.pgrid{grid-template-columns:1fr 1fr}nav.tabs a{font-size:.64rem}nav.tabs a svg{width:24px;height:24px}.ringrow .side b{font-size:1.6rem}.macros{gap:12px 18px}.wday{grid-template-columns:1fr}.wmeals{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr 1fr}.stat b{font-size:1.1rem}}
+@media (prefers-reduced-motion:no-preference){.cell,.chip,.btn{transition:background .15s,border-color .15s}}
+</style>
+
+<main id="view"></main>
+
+<nav class="tabs" aria-label="Fő menü"><div class="in">
+  <a href="#nap" data-tab="nap"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9v12h14V9"/><path d="M10 21v-6h4v6"/></svg>Ma</a>
+  <a href="#het" data-tab="het"><svg viewBox="0 0 24 24"><rect x="3" y="12" width="4.5" height="9" rx="1"/><rect x="9.75" y="7" width="4.5" height="14" rx="1"/><rect x="16.5" y="3" width="4.5" height="18" rx="1"/></svg>Hét</a>
+  <a href="#receptek" data-tab="receptek"><svg viewBox="0 0 24 24"><path d="M5 3h11a3 3 0 0 1 3 3v15H8a3 3 0 0 1-3-3z"/><path d="M5 18a3 3 0 0 1 3-3h11M9 7h6M9 10h4"/></svg>Receptek</a>
+  <a href="#bevasarlas" data-tab="bevasarlas"><svg viewBox="0 0 24 24"><path d="M3 4h2l2.2 11h11L21 7H6"/><circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/></svg>Bevásárlás</a>
+  <a href="#info" data-tab="info"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>Infó</a>
+  <a href="#profil" data-tab="profil"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.2-4 4.3-6 8-6s6.8 2 8 6"/></svg>Profil</a>
+</div></nav>
+
+<div id="sheet" hidden></div>
+
+<script>
+/* ---------- Hozzávalók: [név, egység, kategória] ---------- */
+const CATS={gab:"Gabona, keményítő",feh:"Fehérje",zold:"Zöldség",gyu:"Gyümölcs",tej:"Tejtermék, helyettesítő",kamra:"Kamra, fűszer",teszt:"Tesztételek"};
+const I={
+ zab:["Zabpehely","g","gab"], rizs:["Rizs (nyers)","g","gab"], rizsteszta:["Rizstészta","g","gab"], quinoa:["Quinoa (nyers)","g","gab"],
+ rizspehely:["Rizspehely","g","gab"], burgonya:["Burgonya (közepes)","db","gab"], kenyer:["Gluténmentes kenyér","szelet","gab"],
+ csirkemell:["Csirkemell","g","feh"], csirkecomb:["Csirkecomb (csont nélkül)","g","feh"], lazac:["Lazacfilé","g","feh"],
+ hal:["Fehér halfilé (pl. tőkehal)","g","feh"], garnela:["Garnélarák (tisztított)","g","feh"], daralt:["Darált hús","g","feh"],
+ tonhal:["Tonhal konzerv, natúr","db","feh"], tojas:["Tojás","db","feh"], tofu:["Tofu","g","feh"],
+ cukkini:["Cukkini","db","zold"], repa:["Sárgarépa","db","zold"], spenot:["Friss spenót","g","zold"], padlizsan:["Padlizsán","db","zold"],
+ paprika:["Kaliforniai paprika","db","zold"], bokchoy:["Bok choy","fej","zold"], paradicsom:["Paradicsom","db","zold"],
+ uborka:["Uborka","db","zold"], passata:["Passzírozott paradicsom","g","zold"], bazsalikom:["Friss bazsalikom","g","zold"],
+ banan:["Banán","db","gyu"], szolo:["Szőlő","g","gyu"], afonya:["Áfonya","g","gyu"], citrom:["Citrom","db","gyu"],
+ tej:["Laktózmentes tej","ml","tej"], joghurt:["Laktózmentes görög joghurt","g","tej"], sajt:["Kemény érlelt sajt (cheddar, parmezán)","g","tej"],
+ feta:["Feta","g","tej"], kokusztej:["Kókusztej","ml","tej"],
+ oliva:["Olívaolaj","ml","kamra"], szezam:["Szezámolaj","ml","kamra"], szoja:["Szójaszósz","ml","kamra"], curry:["Curry fűszerkeverék","tk","kamra"],
+ fahej:["Fahéj","csipet","kamra"], rozmaring:["Rozmaring","csipet","kamra"], dio:["Dió","g","kamra"], mandula:["Mandula","g","kamra"],
+ alma:["Alma","db","teszt"], mez:["Méz","ek","teszt"], mango:["Mangó (fél) vagy körte (1 db)","adag","teszt"],
+ hagyma:["Vöröshagyma (vagy 2–3 gerezd fokhagyma)","fej","teszt"], lakttej:["Tehéntej vagy natúr joghurt (laktózos)","ml","teszt"]
+};
+
+/* kcal egységenként (g, ml, db, szelet…) – átlagos tápértékadatok, nyers súlyra */
+const KC={zab:3.7,rizs:3.6,rizsteszta:3.6,quinoa:3.7,rizspehely:3.8,burgonya:110,kenyer:80,
+ csirkemell:1.1,csirkecomb:1.5,lazac:2.0,hal:0.8,garnela:0.85,daralt:2.2,tonhal:130,tojas:75,tofu:1.3,
+ cukkini:35,repa:30,spenot:0.23,padlizsan:75,paprika:40,bokchoy:25,paradicsom:20,uborka:45,passata:0.3,bazsalikom:0.2,
+ banan:105,szolo:0.7,afonya:0.57,citrom:20,tej:0.47,joghurt:0.8,sajt:4.0,feta:2.6,kokusztej:1.9,
+ oliva:8.2,szezam:8.2,szoja:0.6,curry:6,fahej:1,rozmaring:0,dio:6.5,mandula:5.8,
+ alma:80,mez:60,mango:100,hagyma:45,lakttej:0.64};
+
+/* makrók egységenként: [fehérje g, zsír g, szénhidrát g, rost g] */
+const MC={zab:[.13,.07,.6,.1],rizs:[.07,.006,.79,.013],rizsteszta:[.06,.01,.8,.016],quinoa:[.14,.06,.64,.07],rizspehely:[.07,.01,.85,.01],
+ burgonya:[3,.2,26,3.3],kenyer:[1.5,2.5,15,2],csirkemell:[.23,.015,0,0],csirkecomb:[.19,.07,0,0],lazac:[.2,.13,0,0],hal:[.18,.007,0,0],
+ garnela:[.2,.01,0,0],daralt:[.19,.15,0,0],tonhal:[29,1,0,0],tojas:[6.5,5.3,.4,0],tofu:[.13,.07,.02,.01],
+ cukkini:[2.4,.6,6,2],repa:[.7,.2,7.5,2.2],spenot:[.029,.004,.036,.022],padlizsan:[3,.5,18,9],paprika:[1.5,.4,9,3],bokchoy:[3,.4,4,2],
+ paradicsom:[1,.2,4.7,1.4],uborka:[2,.3,11,1.5],passata:[.015,.002,.05,.012],bazsalikom:[.03,0,.03,.02],
+ banan:[1.3,.4,27,3],szolo:[.007,.002,.18,.009],afonya:[.007,.003,.14,.024],citrom:[.2,.1,5,.5],
+ tej:[.034,.015,.048,0],joghurt:[.1,.02,.04,0],sajt:[.25,.33,.01,0],feta:[.14,.21,.04,0],kokusztej:[.02,.2,.03,0],
+ oliva:[0,.92,0,0],szezam:[0,.92,0,0],szoja:[.08,0,.05,0],curry:[.3,.3,1.1,.1],fahej:[0,0,.2,.1],rozmaring:[0,0,0,0],
+ dio:[.15,.65,.14,.07],mandula:[.21,.5,.22,.12],alma:[.5,.3,25,4.4],mez:[.1,0,17,0],mango:[1,.5,25,2.5],hagyma:[1.2,.1,10,1.8],lakttej:[.034,.015,.048,0]};
+
+/* ---------- Receptek ---------- */
+const T={b:"Reggeli",m:"Főétel",s:"Snack",t:"Teszt"};
+const zabSteps=x=>["A zabpelyhet a tejjel kis lábasban, közepes lángon 5–7 percig főzd, közben kevergesd, hogy ne ragadjon le.","Ha besűrűsödött, vedd le a tűzről, és öntsd tálba.",x];
+const R={
+ zab_banan:{n:"Zabkása banánnal",t:"b",w:1,ing:[["zab",40],["tej",200],["banan",.5],["fahej",1]],st:zabSteps("A tetejére tegyél szeletelt banánt és egy csipet fahéjat.")},
+ zab_fahej:{n:"Zabkása, kevés banán, fahéj",t:"b",w:1,ing:[["zab",40],["tej",200],["banan",.25],["fahej",1]],st:zabSteps("A tetejére tegyél kevés (negyed) szeletelt banánt és egy csipet fahéjat.")},
+ zab_szolo:{n:"Zabkása, kevés szőlő",t:"b",w:2,ing:[["zab",40],["tej",200],["szolo",40]],st:zabSteps("A tetejére tegyél néhány szem félbevágott szőlőt.")},
+ zab_dio:{n:"Zabkása dióval",t:"b",w:3,ing:[["zab",40],["tej",200],["dio",15]],st:zabSteps("Szórd meg durvára vágott dióval.")},
+ zab_afonya:{n:"Zabkása áfonyával",t:"b",w:3,ing:[["zab",40],["tej",200],["afonya",50]],st:zabSteps("Szórd a tetejére az áfonyát.")},
+ tojas_piritos_par:{n:"Tojás pirítóssal, paradicsommal",t:"b",w:1,ing:[["tojas",2],["kenyer",1],["paradicsom",.5],["oliva",5]],st:["A tojásokat forró, olajozott serpenyőben süsd tükörtojásnak, vagy kavard rántottának.","Közben pirítsd meg a kenyeret.","Tálald szeletelt paradicsommal."]},
+ tojas_piritos:{n:"Tojás pirítóssal",t:"b",w:1,ing:[["tojas",2],["kenyer",1],["oliva",5]],st:["A tojásokat forró, olajozott serpenyőben süsd tükörtojásnak, vagy kavard rántottának.","Közben pirítsd meg a kenyeret, és tálald együtt."]},
+ joghurt_afonya:{n:"Görög joghurt áfonyával",t:"b",w:1,ing:[["joghurt",200],["afonya",50]],st:["Öntsd tálba a joghurtot.","Szórd a tetejére az áfonyát."]},
+ joghurt_mandula:{n:"Görög joghurt, pár mandula",t:"b",w:1,ing:[["joghurt",200],["mandula",15]],st:["Öntsd tálba a joghurtot.","Szórj a tetejére pár szem mandulát."]},
+ joghurt_szolo:{n:"Görög joghurt szőlővel",t:"b",w:3,ing:[["joghurt",200],["szolo",50]],st:["Öntsd tálba a joghurtot.","Tegyél rá néhány szem félbevágott szőlőt."]},
+ rizspehely:{n:"Rizspehely laktózmentes tejjel",t:"b",w:2,ing:[["rizspehely",40],["tej",200]],st:["Öntsd tálba a rizspelyhet.","Önts rá hideg vagy langyos laktózmentes tejet, és hagyd 2–3 percig állni, hogy megpuhuljon.","Ha szeretnéd, ízesítsd egy csipet fahéjjal."]},
+ rizspehely_banan:{n:"Rizspehely banánnal",t:"b",w:3,ing:[["rizspehely",40],["tej",200],["banan",.5]],st:["Öntsd tálba a rizspelyhet, önts rá laktózmentes tejet.","Hagyd 2–3 percig állni, hogy megpuhuljon.","Tedd a tetejére a szeletelt banánt."]},
+ rizspehely_afonya:{n:"Rizspehely áfonyával",t:"b",w:4,ing:[["rizspehely",40],["tej",200],["afonya",50]],st:["Öntsd tálba a rizspelyhet, önts rá laktózmentes tejet.","Hagyd 2–3 percig állni, hogy megpuhuljon.","Szórd a tetejére az áfonyát."]},
+ rantotta_spenot:{n:"Tojásrántotta spenóttal",t:"b",w:2,ing:[["tojas",2],["spenot",30],["oliva",5]],st:["A spenótot forró olajos serpenyőben pár másodpercig párold össze.","Öntsd rá a felvert, sózott tojást.","Közepes lángon kevergesd 3–4 percig, amíg megszilárdul."],x:"só"},
+ rantotta_piritos:{n:"Rántotta pirítóssal",t:"b",w:2,ing:[["tojas",2],["kenyer",1],["oliva",5]],st:["A tojásokat verd fel egy csipet sóval.","Olajozott serpenyőben, közepes lángon kevergesd 3–4 percig, amíg megszilárdul.","Közben pirítsd meg a kenyeret, és tálald együtt."],x:"só"},
+
+ csirke_rizs_cukkini:{n:"Grillcsirke rizzsel, cukkinivel",t:"m",w:1,ing:[["csirkemell",150],["rizs",60],["cukkini",.5],["oliva",10]],st:["A rizst főzd meg a csomagoláson leírtak szerint.","A csirkemellet sózd, borsozd, és olívaolajos serpenyőben süsd oldalanként 5–6 percig.","A cukkinit karikázd fel, és ugyanabban a serpenyőben pirítsd pár percig.","Tálald együtt."],x:"só, bors"},
+ csirke_rizs:{n:"Csirke rizzsel",t:"m",w:4,ing:[["csirkemell",150],["rizs",60],["oliva",10]],st:["A rizst főzd meg a csomagoláson leírtak szerint.","A csirkemellet sózd, borsozd, és olívaolajos serpenyőben süsd oldalanként 5–6 percig.","Tálald a rizzsel."],x:"só, bors"},
+ lazac_burg_repa:{n:"Sült lazac burgonyával, sárgarépával",t:"m",w:1,ing:[["lazac",150],["burgonya",2],["repa",1],["oliva",10],["citrom",.25]],st:["Melegítsd elő a sütőt 200 °C-ra.","A burgonyát és a répát kockázd fel, forgasd össze olívaolajjal és sóval, és süsd 25 percig.","A lazacot sózd, borsozd, locsold meg citromlével.","Az utolsó 12–15 percre tedd a zöldségek mellé a sütőbe."],x:"só, bors"},
+ lazac_burgonya:{n:"Lazac burgonyával",t:"m",w:4,ing:[["lazac",150],["burgonya",2],["oliva",10],["citrom",.25]],st:["Melegítsd elő a sütőt 200 °C-ra.","A burgonyát kockázd fel, forgasd össze olívaolajjal és sóval, és süsd 25 percig.","A lazacot sózd, borsozd, locsold meg citromlével.","Az utolsó 12–15 percre tedd a burgonya mellé a sütőbe."],x:"só, bors"},
+ hal_burg_repa:{n:"Sült hal burgonyával, répával",t:"m",w:1,ing:[["hal",150],["burgonya",2],["repa",1],["oliva",10],["citrom",.25]],st:["Melegítsd elő a sütőt 200 °C-ra.","A burgonyát és a répát kockázd fel, forgasd össze olívaolajjal és sóval, és kezdd el sütni.","A halfilét sózd, borsozd, locsold meg citromlével, és tedd a zöldségek mellé.","Süsd összesen kb. 20–25 percig, amíg a burgonya megpuhul és a hal átsül."],x:"só, bors"},
+ quinoa_lazac_spenot:{n:"Quinoa lazaccal, spenóttal",t:"m",w:1,ing:[["quinoa",50],["lazac",120],["spenot",30],["oliva",10],["citrom",.25]],st:["A quinoát kétszeres mennyiségű vízben főzd 12–15 percig, amíg felszívja a vizet.","A lazacot serpenyőben süsd mindkét oldalán 4–5 percig.","A spenótot forró olajban pár másodpercig forgasd össze.","Tálald a quinoával és a lazaccal, locsold meg citromlével."],x:"só"},
+ csirke_wok:{n:"Csirke wok padlizsánnal, paprikával",t:"m",w:1,ing:[["csirkemell",150],["padlizsan",.5],["paprika",.5],["szezam",10],["szoja",10]],st:["A padlizsánt és a paprikát vágd csíkokra, forró wokban pirítsd 3–4 percig, majd vedd ki.","Ugyanabban a wokban süsd a csíkokra vágott csirkét 5–6 percig.","Add vissza a zöldségeket, és ízesítsd kevés szójaszósszal."],note:"Szezámolaj helyett olívaolaj is jó."},
+ rizsteszta_paradicsom:{n:"Rizstészta paradicsomos-bazsalikomos szósszal",t:"m",w:1,ing:[["rizsteszta",80],["passata",200],["bazsalikom",5],["oliva",10]],st:["A tésztát főzd ki a csomagoláson leírtak szerint.","Közben a passzírozott paradicsomot olívaolajon melegítsd 5 percig, és sózd.","A végén szaggass bele friss bazsalikomot, majd forgasd össze a tésztával."],x:"só"},
+ tofu_bokchoy:{n:"Tofu bok choyval, rizzsel",t:"m",w:1,ing:[["tofu",150],["bokchoy",1],["rizs",50],["szezam",10],["szoja",10]],st:["Főzd meg a rizst.","A tofut kockázd fel, és forró olajos serpenyőben süsd ropogósra minden oldalán.","Add hozzá a bok choyt, pirítsd pár percig, és ízesítsd szójaszósszal."]},
+ wok_tofu_zoldseg:{n:"Wok tofuval, alacsony FODMAP zöldségekkel",t:"m",w:1,ing:[["tofu",150],["paprika",.5],["cukkini",.5],["rizs",50],["szezam",10],["szoja",10]],st:["Főzd meg a rizst.","A tofut kockázd fel, és forró olajos wokban süsd ropogósra.","Add hozzá a csíkokra vágott paprikát és cukkinit, pirítsd 3–4 percig.","Ízesítsd szójaszósszal, és tálald a rizzsel."]},
+ omlett_cukkini_spenot:{n:"Omlett cukkinivel, spenóttal",t:"m",w:1,ing:[["tojas",3],["cukkini",.25],["spenot",30],["oliva",5]],st:["A tojásokat verd fel egy csipet sóval.","A reszelt cukkinit és a spenótot forró olajos serpenyőben pár másodpercig párold.","Öntsd rá a tojást, és fedő alatt, közepes lángon süsd 4–5 percig, amíg megszilárdul."],x:"só"},
+ sult_csirke_repa:{n:"Sült csirke sárgarépával",t:"m",w:1,ing:[["csirkecomb",150],["repa",2],["oliva",10]],st:["Melegítsd elő a sütőt 200 °C-ra.","A csirkét és a karikára vágott répát forgasd össze olívaolajjal, sóval, borssal.","Süsd 25–30 percig, félidőben forgasd meg."],x:"só, bors"},
+ sult_csirke_repa_rizs:{n:"Sült csirke sárgarépával, rizzsel",t:"m",w:2,ing:[["csirkecomb",150],["repa",2],["rizs",20],["oliva",10]],st:["Melegítsd elő a sütőt 200 °C-ra.","A csirkét és a karikára vágott répát forgasd össze olívaolajjal, sóval, borssal.","Süsd 25–30 percig, félidőben forgasd meg.","Közben főzd meg a rizst (20 g nyers ≈ 50 g főtt), és tálald mellé."],x:"só, bors"},
+ garnela_wok:{n:"Garnélarák wok zöldségekkel",t:"m",w:2,ing:[["garnela",150],["paprika",.5],["cukkini",.5],["repa",1],["szezam",10],["szoja",10]],st:["A zöldségeket vágd csíkokra, forró wokban pirítsd 3–4 percig, majd vedd ki.","Ugyanabban a wokban süsd a garnélát 2–3 percig, amíg rózsaszínű lesz.","Add vissza a zöldségeket, ízesítsd szójaszósszal, és forgasd össze."]},
+ garnela_wok_paprika:{n:"Wok garnélával, paprikával",t:"m",w:3,ing:[["garnela",150],["paprika",1],["szezam",10],["szoja",10]],st:["A paprikát vágd csíkokra, forró wokban pirítsd 3–4 percig, majd vedd ki.","Ugyanabban a wokban süsd a garnélát 2–3 percig, amíg rózsaszínű lesz.","Add vissza a paprikát, ízesítsd szójaszósszal, és forgasd össze."]},
+ rizsteszta_bolognai:{n:"Rizstészta bolognai",t:"m",w:2,ing:[["rizsteszta",80],["daralt",120],["passata",200],["repa",1],["oliva",10]],st:["A darált húst olívaolajon pirítsd 5 percig.","Add hozzá a reszelt sárgarépát, és pirítsd további 2 percig.","Öntsd rá a passzírozott paradicsomot, sózd, és lassú tűzön főzd 10–15 percig.","Közben főzd ki a rizstésztát, és tálald a szósszal."],x:"só"},
+ hal_pure:{n:"Sült hal burgonyapürével",t:"m",w:2,ing:[["hal",150],["burgonya",2],["tej",50],["oliva",10]],st:["A burgonyát főzd puhára, törd össze, és kevés olívaolajjal és laktózmentes tejjel krémesítsd.","A halat sózd, és olívaolajos serpenyőben süsd mindkét oldalán 3–4 percig.","Tálald a pürével."],x:"só"},
+ quinoa_csirke_uborka:{n:"Quinoa saláta csirkével, uborkával",t:"m",w:2,ing:[["quinoa",50],["csirkemell",120],["uborka",.5],["oliva",10],["citrom",.25]],st:["Főzd meg a quinoát, és hagyd kicsit hűlni.","A csirkemellet süsd vagy főzd meg, majd kockázd fel.","Keverd össze a quinoát, a csirkét és a kockázott uborkát.","Ízesítsd olívaolajjal, citromlével és sóval."],x:"só"},
+ tofu_curry:{n:"Tofu curry kókusztejjel",t:"m",w:2,ing:[["tofu",150],["kokusztej",150],["paprika",.5],["cukkini",.25],["curry",1],["oliva",10]],st:["A tofut kockázd fel, és olívaolajon pirítsd körbe.","Add hozzá a paprikát és a cukkinit, pirítsd 2–3 percig.","Szórd meg curryvel, öntsd fel a kókusztejjel, és lassú tűzön főzd 8–10 percig."]},
+ tofu_curry_rizs:{n:"Tofu curry rizzsel",t:"m",w:3,ing:[["tofu",150],["kokusztej",150],["paprika",.5],["cukkini",.25],["curry",1],["rizs",20],["oliva",10]],st:["Főzd meg a rizst (20 g nyers ≈ 50 g főtt).","A tofut kockázd fel, és olívaolajon pirítsd körbe.","Add hozzá a paprikát és a cukkinit, pirítsd 2–3 percig.","Szórd meg curryvel, öntsd fel a kókusztejjel, lassú tűzön főzd 8–10 percig, és tálald a rizzsel."]},
+ omlett_paprika_sajt:{n:"Omlett paprikával, sajttal",t:"m",w:2,ing:[["tojas",3],["paprika",.5],["sajt",30],["oliva",5]],st:["A paprikát kockázd fel, és forró olajos serpenyőben pirítsd pár percig.","Öntsd rá a felvert, sózott tojást, és közepes lángon süsd 3–4 percig.","A felénél szórd meg a reszelt sajttal, majd hajtsd össze."],x:"só"},
+ omlett_spenot_sajt:{n:"Omlett spenóttal, sajttal",t:"m",w:3,ing:[["tojas",3],["spenot",30],["sajt",30],["oliva",5]],st:["A spenótot forró olajos serpenyőben pár másodpercig párold össze.","Öntsd rá a felvert, sózott tojást, és közepes lángon süsd 3–4 percig.","A felénél szórd meg a reszelt sajttal, majd hajtsd össze."],x:"só"},
+ grillcsirke_burgonya:{n:"Grillcsirke sült burgonyával",t:"m",w:2,ing:[["csirkemell",150],["burgonya",2],["oliva",10],["rozmaring",1]],st:["Melegítsd elő a sütőt 200 °C-ra.","A kockázott burgonyát forgasd össze olívaolajjal, sóval, rozmaringgal, és süsd 25 percig.","A csirkemellet sózd, borsozd, és grillserpenyőben vagy sütőben süsd oldalanként 6–7 percig."],x:"só, bors"},
+ hal_rizs_repa:{n:"Sült hal rizzsel, répával",t:"m",w:2,ing:[["hal",150],["rizs",60],["repa",1],["oliva",10],["citrom",.25]],st:["Főzd meg a rizst.","A répát karikázd fel, és kevés olívaolajon párold vagy süsd puhára.","A halat sózd, és olívaolajos serpenyőben süsd mindkét oldalán 3–4 percig.","Tálald együtt, locsold meg citromlével."],x:"só"},
+ csirkecomb_zoldseg:{n:"Csirkecomb sütőben, sült zöldséggel",t:"m",w:3,ing:[["csirkecomb",150],["cukkini",.5],["repa",1],["paprika",.5],["oliva",10]],st:["Melegítsd elő a sütőt 200 °C-ra.","A csirkecombot és a felkockázott zöldségeket egy tepsiben forgasd össze olívaolajjal, sóval, borssal.","Süsd 30–35 percig, félidőben forgasd meg."],x:"só, bors"},
+ rizsteszta_tonhal:{n:"Rizstészta tonhallal, cukkinivel",t:"m",w:3,ing:[["rizsteszta",80],["tonhal",1],["cukkini",.5],["oliva",10],["citrom",.25]],st:["Főzd ki a tésztát.","A kockázott cukkinit olívaolajon pirítsd 3–4 percig.","Add hozzá a lecsepegtetett tonhalat, és melegítsd át.","Forgasd össze a tésztával, és ízesítsd citromlével."],x:"só"},
+ quinoa_feta_uborka:{n:"Quinoa saláta fetával, uborkával",t:"m",w:3,ing:[["quinoa",50],["feta",40],["uborka",.5],["oliva",10],["citrom",.25]],st:["Főzd meg a quinoát, és hűtsd le.","Keverd össze a kockázott fetával és uborkával.","Ízesítsd olívaolajjal és citromlével."]},
+ grillcsirke_salata:{n:"Grillcsirke saláta (uborka, paradicsom)",t:"m",w:3,ing:[["csirkemell",150],["uborka",.5],["paradicsom",.5],["oliva",10],["citrom",.25]],st:["A csirkemellet sózd, és olívaolajos serpenyőben süsd oldalanként 5–6 percig, majd vágd csíkokra.","Az uborkát és a paradicsomot kockázd fel.","Keverd össze a csirkével, és ízesítsd olívaolajjal és citromlével."],x:"só"},
+
+ s_sajt_dio:{n:"Kemény sajt, pár dió",t:"s",w:1,ing:[["sajt",30],["dio",15]],st:["Vágj fel 30 g kemény sajtot, és egyél mellé pár szem diót."]},
+ s_sajt:{n:"Kemény sajt",t:"s",w:1,ing:[["sajt",30]],st:["30 g kemény, érlelt sajt (pl. cheddar, parmezán)."]},
+ s_joghurt:{n:"Laktózmentes görög joghurt",t:"s",w:1,ing:[["joghurt",150]],st:["150 g laktózmentes görög joghurt, natúran."]},
+ s_mandula:{n:"Maréknyi mandula",t:"s",w:1,ing:[["mandula",20]],st:["Egy kis marék (kb. 20 g) mandula."]},
+ s_szolo:{n:"Szőlő, kis adag",t:"s",w:1,ing:[["szolo",80]],st:["Kb. 80 g szőlő. Figyelj a kis adagra, mert a szőlő fruktózt tartalmaz."]},
+ s_dio:{n:"Dió",t:"s",w:3,ing:[["dio",20]],st:["Egy kis marék (kb. 20 g) dió."]},
+
+ t_alma:{n:"Teszt: 1 db alma",t:"t",w:5,ing:[["alma",1]],st:["Mosd meg, és héjastul edd meg.","Reggeli után kb. 2 órával, önmagában, más étkezéstől függetlenül edd.","Aznap ne kombináld más FODMAP-forrással.","A következő 24 órában figyeld: puffadás, hasi fájdalom, székletváltozás."]},
+ t_mez:{n:"Teszt: 1 evőkanál méz",t:"t",w:5,ing:[["mez",1]],st:["Önmagában, kanálból fogyaszd, vagy keverd egy pohár vízbe vagy teába.","Ne rejtsd süteménybe vagy más ételbe, hogy pontosan tudd, mennyit ettél.","Reggeli után kb. 2 órával fogyaszd, majd 24 órán át figyeld a tüneteket."]},
+ t_mango:{n:"Teszt: fél mangó vagy 1 körte",t:"t",w:5,ing:[["mango",1]],st:["Hámozd meg, kockázd fel.","Önmagában, egy adagban edd meg, ne oszd meg más étkezéssel aznap.","Reggeli után kb. 2 órával fogyaszd, majd 24 órán át figyeld a tüneteket."]},
+ t_hagyma:{n:"Teszt: főtt hagyma vagy fokhagyma",t:"t",w:6,ing:[["hagyma",1]],st:["Egy közepes fej hagymát vagy 2–3 gerezd fokhagymát főzz vagy dinsztelj puhára.","Önmagában, más ételtől függetlenül fogyaszd el, reggeli után kb. 2 órával.","A következő 24 órában figyeld a puffadást, fájdalmat, székletváltozást."]},
+ t_tej:{n:"Teszt: 1 pohár tej vagy natúr joghurt (laktózos)",t:"t",w:6,ing:[["lakttej",200]],st:["Igyál meg egy pohár (kb. 200 ml) sima tehéntejet, vagy egyél meg egy natúr, laktózos joghurtot.","Önmagában, más étkezéstől külön fogyaszd, reggeli után kb. 2 órával.","A következő 24 órában figyeld a tüneteket."]}
+};
+
+/* ---------- 6 hetes terv ---------- */
+const DN=["Hétfő","Kedd","Szerda","Csütörtök","Péntek","Szombat","Vasárnap"];
+const DS=["H","K","Sze","Cs","P","Szo","V"];
+const d=(b,l,v,s,k,x)=>Object.assign({b,l,v,s,k},x||{});
+const W4=[
+ d("zab_banan","csirke_rizs_cukkini","lazac_burgonya","s_sajt",1450),
+ d("tojas_piritos","quinoa_csirke_uborka","wok_tofu_zoldseg","s_joghurt",1500),
+ d("rizspehely_afonya","hal_rizs_repa","rizsteszta_paradicsom","s_mandula",1400),
+ d("joghurt_szolo","grillcsirke_salata","omlett_spenot_sajt","s_sajt",1450),
+ d("zab_dio","garnela_wok","grillcsirke_burgonya","s_dio",1500),
+ d("rantotta_piritos","quinoa_lazac_spenot","tofu_curry_rizs","s_joghurt",1500),
+ d("zab_banan","csirke_rizs","hal_burg_repa","s_sajt",1450)];
+const base=(i,k,x)=>Object.assign({},W4[i],{k},x||{});
+const PLAN=[
+ {ph:"elim",t:"Elimináció – alap",g:"Teljes elimináció: a magas FODMAP-tartalmú és fruktózdús ételek teljes kizárása, hogy a bél megnyugodjon.",days:[
+  d("zab_banan","csirke_rizs_cukkini","lazac_burg_repa","s_sajt_dio",1500),
+  d("tojas_piritos_par","quinoa_lazac_spenot","csirke_wok","s_joghurt",1450),
+  d("joghurt_afonya","rizsteszta_paradicsom","tofu_bokchoy","s_mandula",1400),
+  d("zab_fahej","hal_burg_repa","omlett_cukkini_spenot","s_sajt",1450),
+  d("tojas_piritos","csirke_rizs_cukkini","quinoa_lazac_spenot","s_szolo",1500),
+  d("joghurt_mandula","wok_tofu_zoldseg","sult_csirke_repa","s_sajt",1450),
+  d("zab_banan","rizsteszta_paradicsom","hal_burg_repa","s_joghurt",1500)]},
+ {ph:"elim",t:"Elimináció – folytatás",g:"Az elimináció folytatása, kis változatossággal, hogy ne unj rá.",days:[
+  d("rizspehely","sult_csirke_repa_rizs","garnela_wok","s_sajt_dio",1450),
+  d("rantotta_spenot","rizsteszta_bolognai","hal_pure","s_joghurt",1500),
+  d("zab_szolo","quinoa_csirke_uborka","tofu_curry","s_mandula",1450),
+  d("joghurt_afonya","csirke_rizs_cukkini","omlett_paprika_sajt","s_sajt",1400),
+  d("tojas_piritos","quinoa_lazac_spenot","tofu_bokchoy","s_szolo",1500),
+  d("zab_banan","rizsteszta_paradicsom","grillcsirke_burgonya","s_sajt_dio",1500),
+  d("rantotta_piritos","hal_rizs_repa","garnela_wok","s_joghurt",1450)]},
+ {ph:"elim",t:"Elimináció – haladó",g:"Az elimináció már rutinból megy. Több változatosság, hogy fenntartható legyen.",days:[
+  d("zab_dio","csirkecomb_zoldseg","quinoa_lazac_spenot","s_sajt",1500),
+  d("tojas_piritos_par","rizsteszta_tonhal","garnela_wok_paprika","s_joghurt",1450),
+  d("rizspehely_banan","quinoa_feta_uborka","tofu_curry_rizs","s_mandula",1400),
+  d("joghurt_szolo","grillcsirke_burgonya","omlett_spenot_sajt","s_sajt",1450),
+  d("zab_afonya","hal_rizs_repa","tofu_bokchoy","s_dio",1500),
+  d("rantotta_piritos","grillcsirke_salata","rizsteszta_bolognai","s_joghurt",1500),
+  d("zab_banan","quinoa_lazac_spenot","csirke_wok","s_sajt",1450)]},
+ {ph:"elim",t:"Elimináció – stabilizálás",g:"Az elimináció lezárása. Figyeld a tüneteidet: ha 4 hét után jelentősen javultak, jó úton jársz. Szerezz be egy füzetet a jövő heti tesztekhez.",days:W4},
+ {ph:"reint",t:"Reintrodukció – fruktóz",g:"A fruktóz kontrollált visszaépítése. Az alapmenü a 4. hét mintája; kedden, csütörtökön és szombaton egy-egy fruktózforrást tesztelsz, és 24 órán át figyeled a tüneteket.",days:[
+  base(0,1450,{note:"Nincs teszt, alapállapot."}),
+  base(1,1500,{tst:"t_alma",note:"1 db alma reggeli után 2 órával. Figyeld 24 órán át: puffadás, fájdalom, széklet."}),
+  base(2,1450,{note:"Kiürülési nap: tünetmentes alapállapotra vársz."}),
+  base(3,1450,{tst:"t_mez",note:"1 evőkanál méz. Ugyanúgy figyeld a tüneteket."}),
+  base(4,1500,{note:"Kiürülési nap."}),
+  base(5,1500,{tst:"t_mango",note:"Fél mangó vagy 1 körte. Figyeld a tüneteket."}),
+  base(6,1450,{note:"Összegzés: nézd át a jegyzeteidet, melyik teszt okozott tünetet."})]},
+ {ph:"reint",t:"Reintrodukció – egyéb FODMAP",g:"Hagyma-fokhagyma és laktóz tesztelése, hogy teljes képed legyen arról, mit tolerálsz. Egy új anyag naponta, köztük kiürülési napokkal.",days:[
+  base(0,1450,{note:"Alapállapot."}),
+  base(1,1500,{tst:"t_hagyma",note:"Főtt hagyma vagy fokhagyma egy adagban. Figyeld a puffadást, fájdalmat."}),
+  base(2,1450,{note:"Kiürülési nap."}),
+  base(3,1450,{tst:"t_tej",note:"1 pohár tej vagy natúr joghurt (laktózos). Figyeld a tüneteket."}),
+  base(4,1500,{note:"Kiürülési nap."}),
+  base(5,1550,{free:1,note:"Szabadabb nap: építsd be azokat az ételeket, amik a tesztek alapján jól bejöttek. Kis örömétkezés is belefér. Az alábbi menü csak javaslat."}),
+  base(6,1450,{note:"Összegző nap: nézd át mindkét hét teszteredményét. Írd össze, mit tolerálsz jól, és mit kerülnél inkább."})]}
+];
+const MEALS=[["b","Reggeli"],["l","Ebéd"],["v","Vacsora"],["s","Snack"]];
+const EXTRA={4:["Jegyzetfüzet vagy jegyzetalkalmazás a jövő heti tesztekhez"],5:["Füzet vagy jegyzet a tünetek követésére"],6:["Szombati szabad napra: amit szeretnél, a tesztek alapján"]};
+
+/* ---------- Állapot ---------- */
+const KEY="reizdarm-v1";
+let S={start:"2026-09-28",done:{},notes:{},shop:{},rEdit:{},mEdit:{}};
+try{const raw=localStorage.getItem(KEY);if(raw)S=Object.assign(S,JSON.parse(raw))}catch(e){}
+if(S.start==="2026-09-21"&&!S.startSet)S.start="2026-09-28";
+S.rEdit=S.rEdit||{};S.mEdit=S.mEdit||{};S.burn=S.burn||{};S.profile=S.profile||null;
+
+/* alapanyagcsere (Mifflin–St Jeor) és napi szükséglet */
+const ACT=[[1.2,"Ülő életmód","irodai munka, alig mozgás"],[1.375,"Enyhén aktív","könnyű mozgás heti 1–3×"],[1.55,"Mérsékelten aktív","mozgás heti 3–5×"],[1.725,"Aktív","intenzív mozgás heti 6–7×"]];
+function bmr(p){if(!p)return null;return Math.round(10*p.weight+6.25*p.height-5*p.age+(p.sex==="m"?5:-161))}
+function baseNeed(p){const b=bmr(p);return b==null?null:Math.round(b*(p.act||1.2))}
+const burnOf=i=>(S.burn[i]||[]).reduce((s,x)=>s+x.kcal,0);
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+let UI={sel:null,week:null,shopWeek:null,filter:"all",q:""};
+
+/* ---------- Segédek ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const parseD=s=>{const [y,m,dd]=s.split("-").map(Number);return new Date(y,m-1,dd)};
+const dateOf=i=>{const x=parseD(S.start);x.setDate(x.getDate()+i);return x};
+const fmtDate=x=>x.toLocaleDateString("hu-HU",{month:"short",day:"numeric"});
+const todayIdx=()=>{const t=new Date();t.setHours(0,0,0,0);return Math.round((t-parseD(S.start))/864e5)};
+const clamp=i=>Math.max(0,Math.min(41,i));
+const dayOf=i=>PLAN[Math.floor(i/7)].days[i%7];
+const dk=(i,m)=>`${i}:${m}`;
+const dayDone=i=>MEALS.every(([m])=>S.done[dk(i,m)])&&(!dayOf(i).tst||S.done[dk(i,"t")]);
+const dayAny=i=>MEALS.some(([m])=>S.done[dk(i,m)])||S.done[dk(i,"t")];
+const FR={.25:"¼",.5:"½",.75:"¾"};
+function frac(a){const w=Math.floor(a+1e-9),f=Math.round((a-w)*100)/100;if(!f)return String(w);if(FR[f])return (w?w:"")+FR[f];return a.toFixed(1).replace(".",",")}
+function fmtQ(a,u){
+  if(u==="g")return a>=1000?(a/1000).toFixed(2).replace(/\.?0+$/,"").replace(".",",")+" kg":Math.round(a)+" g";
+  if(u==="ml")return a>=1000?(a/1000).toFixed(2).replace(/\.?0+$/,"").replace(".",",")+" l":Math.round(a)+" ml";
+  return frac(a)+" "+u;
+}
+const ingText=([k,a])=>`${fmtQ(a,I[k][1])} ${I[k][0].toLowerCase()}`;
+
+/* mennyiségek és kcal: eredeti recept → saját recept-alap → adott napi módosítás */
+const calc=amts=>Math.round(amts.reduce((s,[k,a])=>s+a*(KC[k]||0),0));
+function recipeAmounts(id){const e=S.rEdit[id];return R[id].ing.map(([k,a])=>[k,e&&e.ing&&e.ing[k]!=null?e.ing[k]:a])}
+function mealEdit(id,mk){const e=mk&&S.mEdit[mk];return e&&e.id===id?e:null}
+function mealAmounts(id,mk){const e=mealEdit(id,mk);return recipeAmounts(id).map(([k,a])=>[k,e&&e.ing&&e.ing[k]!=null?e.ing[k]:a])}
+function recipeKcal(id){const e=S.rEdit[id];return e&&e.kcal!=null?e.kcal:calc(recipeAmounts(id))}
+function mealKcal(id,mk){
+  const e=mealEdit(id,mk);if(e&&e.kcal!=null)return e.kcal;
+  const c=calc(mealAmounts(id,mk)),r=S.rEdit[id];
+  if(r&&r.kcal!=null){const b=calc(recipeAmounts(id));return b?Math.round(r.kcal*c/b):r.kcal}
+  return c;
+}
+const mk=(i,m)=>`${i}:${m}`;
+const macros=amts=>amts.reduce((t,[k,a])=>{const m=MC[k]||[0,0,0,0];return t.map((v,x)=>v+a*m[x])},[0,0,0,0]);
+function dayKcal(i){const D=dayOf(i);return [...MEALS.map(([m])=>m),"tst"].reduce((s,m)=>D[m]?s+mealKcal(D[m],mk(i,m)):s,0)}
+const phaseLbl=ph=>ph==="elim"?"Elimináció":"Reintrodukció";
+
+/* hol szerepel egy recept */
+const OCC={};
+PLAN.forEach((w,wi)=>w.days.forEach((dy,di)=>{
+  [...MEALS.map(([m,l])=>[m,l]),["tst","Teszt"]].forEach(([m,l])=>{const id=dy[m];if(!id)return;(OCC[id]=OCC[id]||[]).push({i:wi*7+di,l})});
+}));
+
+/* heti hozzávalók összesítése */
+function weekTotals(wi){
+  const tot={};
+  PLAN[wi].days.forEach((dy,di)=>["b","l","v","s","tst"].forEach(m=>{const id=dy[m];if(!id)return;mealAmounts(id,mk(wi*7+di,m)).forEach(([k,a])=>tot[k]=(tot[k]||0)+a)}));
+  return tot;
+}
+
+/* ---------- Nézetek ---------- */
+const ICO={
+ cal:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>',
+ flask:'<svg class="i" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2h12.4a1.5 1.5 0 0 0 1.3-2L14 9V3"/><path d="M7 15h10"/></svg>',
+ note:'<svg class="i" viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5z"/><path d="M9 11h6M9 15h6"/></svg>',
+ cart:'<svg class="i" viewBox="0 0 24 24"><path d="M3 4h2l2.2 11h11L21 7H6"/><circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/></svg>',
+ leaf:'<svg class="i" viewBox="0 0 24 24"><path d="M5 19C5 10 11 4 20 4c0 9-6 15-15 15z"/><path d="M5 19 13 11"/></svg>',
+ user:'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.2-4 4.3-6 8-6s6.8 2 8 6"/></svg>'};
+const ringSvg=(frac,r,w,track,col)=>{const C=2*Math.PI*r,f=Math.max(0,Math.min(1,frac));
+  return `<svg viewBox="0 0 ${2*r+w} ${2*r+w}" aria-hidden="true"><circle cx="${r+w/2}" cy="${r+w/2}" r="${r}" fill="none" stroke="${track}" stroke-width="${w}"/>
+  <circle cx="${r+w/2}" cy="${r+w/2}" r="${r}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${C*f} ${C}"/></svg>`};
+
+function vNap(){
+  const ti=todayIdx();
+  if(UI.sel===null)UI.sel=clamp(ti);
+  const i=UI.sel,wi=Math.floor(i/7),di=i%7,W=PLAN[wi],D=W.days[di];
+  const slots=[...MEALS,["tst","Teszt"]].filter(([m])=>D[m]);
+  const doneKey=m=>dk(i,m==="tst"?"t":m);
+  const menu=dayKcal(i),burned=burnOf(i),base=baseNeed(S.profile);
+  const goal=(base!=null?base:menu)+burned;
+  const eaten=slots.reduce((s,[m])=>S.done[doneKey(m)]?s+mealKcal(D[m],mk(i,m)):s,0);
+  const left=goal-eaten;
+  const balance=goal-menu;
+  const burnList=(S.burn[i]||[]).map((x,n)=>`<div class="burnrow"><span class="tx">${esc(x.label||"Mozgás")}</span><b class="num">${x.kcal} kcal</b><button class="xbtn" data-burndel="${n}" aria-label="Törlés: ${esc(x.label||"Mozgás")}">×</button></div>`).join("");
+  const mAll=macros(slots.flatMap(([m])=>mealAmounts(D[m],mk(i,m))));
+  const mEat=macros(slots.filter(([m])=>S.done[doneKey(m)]).flatMap(([m])=>mealAmounts(D[m],mk(i,m))));
+  const MN=["Fehérje","Zsír","Szénhidrát","Rost"];
+  const f1=v=>v.toFixed(1).replace(".",",");
+  const macroHtml=MN.map((n,x)=>`<div class="macro"><div class="lb">${n}: <b class="num">${f1(mEat[x])}</b><span class="muted num">/${Math.round(mAll[x])} g</span></div><div class="pbar"><span style="width:${mAll[x]?Math.min(100,mEat[x]/mAll[x]*100):0}%"></span></div></div>`).join("");
+  const doneDays=Array.from({length:42},(_,k)=>dayDone(k)).filter(Boolean).length;
+  let grid=`<div></div>`+DS.map(x=>`<div class="h">${x}</div>`).join("");
+  PLAN.forEach((w,wx)=>{grid+=`<div class="wl">${wx+1}. hét</div>`;
+    w.days.forEach((dy,dx)=>{const k=wx*7+dx;
+      grid+=`<button class="cell ${w.ph} ${dayDone(k)?"done":dayAny(k)?"part":""} ${k===ti?"today":""} ${k===i?"sel":""}" data-go="${k}" aria-label="${wx+1}. hét, ${DN[dx]}, ${fmtDate(dateOf(k))}">${dateOf(k).getDate()}${dy.tst?'<span class="tdot"></span>':""}</button>`})});
+  const status=ti<0?`A terv ${-ti} nap múlva indul.`:ti>41?"A 6 hetes terv véget ért.":`Ma a ${Math.floor(ti/7)+1}. hét ${ti%7+1}. napja van.`;
+
+  const mealCards=slots.map(([m,l])=>{const id=D[m],key=mk(i,m),c=!!S.done[doneKey(m)],ed=!!mealEdit(id,key);
+    return `<label class="mealcard ${c?"checked":""}"><input type="checkbox" data-chk="${doneKey(m)}" ${c?"checked":""}>
+      <span class="body"><span class="lbl">${l}${ed?' · <span style="color:var(--reint)">módosítva</span>':""}</span><br>
+        <button type="button" class="dish" data-r="${id}" data-ctx="${key}">${esc(R[id].n)}</button>
+        <div class="ingline">${mealAmounts(id,key).map(ingText).map(esc).join(" · ")}</div></span>
+      <span class="kc"><b class="num">${mealKcal(id,key)}</b><span class="small muted">kcal</span><br><button type="button" class="kbtn" data-r="${id}" data-ctx="${key}" aria-label="Mennyiség és kalória szerkesztése">✎ szerk.</button></span></label>`}).join("");
+
+  const infoRow=D.tst?`<button class="linkrow reint" data-r="${D.tst}" data-ctx="${mk(i,"tst")}">${ICO.flask}<span class="tx"><b>Mai teszt: ${esc(R[D.tst].n.replace("Teszt: ",""))}</b><br><span class="small muted">${esc(D.note)}</span></span><span class="chev">›</span></button>`
+    :D.note?`<div class="linkrow reint" style="cursor:default">${ICO.flask}<span class="tx"><b>${D.free?"Szabad nap":"Mai megjegyzés"}</b><br><span class="small muted">${esc(D.note)}</span></span></div>`
+    :`<div class="linkrow" style="cursor:default">${ICO.leaf}<span class="tx"><b>${esc(W.t)}</b><br><span class="small muted">${esc(W.g)}</span></span></div>`;
+
+  return `<header class="hero"><div class="hero-in">
+    <div class="topbar">
+      <button class="hbtn" data-go="${clamp(ti)}" aria-label="Ugrás a mai napra">${ICO.cal}Ma</button>
+      <span class="brand">Reizdarm</span>
+      <span class="r hpill">${wi+1}. hét · ${phaseLbl(W.ph)}</span>
+    </div>
+    <div class="ringrow">
+      <div class="side"><b class="num">${eaten}</b><span>elfogyasztva</span></div>
+      <div class="ring">${ringSvg(goal?eaten/goal:0,88,10,"rgba(255,255,255,.28)","#fff")}
+        <div class="c"><b class="num">${Math.abs(left)}</b><span>${left>=0?"kcal hátra":"kcal a cél felett"}</span></div></div>
+      <div class="side"><b class="num">${burned}</b><span>elégetve</span></div>
+    </div>
+    <div class="daynav">
+      <button class="hbtn" data-go="${i-1}" ${i===0?"disabled":""} aria-label="Előző nap"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="t">${DN[di]}, ${fmtDate(dateOf(i))}${i===ti?" · ma":""}<small class="num">napi keret ${goal} kcal${base!=null?` (alap ${base}${burned?` + mozgás ${burned}`:""})`:""} · menü ${menu} kcal</small></div>
+      <button class="hbtn" data-go="${i+1}" ${i===41?"disabled":""} aria-label="Következő nap"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+  </div></header>
+  <div class="wrap"><div class="stack">
+   <section class="card lift">
+     <div class="macros">${macroHtml}</div>
+     <div style="margin-top:16px">
+       ${infoRow}
+       ${base==null?`<button class="linkrow" data-tabgo2="profil">${ICO.user}<span class="tx"><b>Add meg az adataidat</b><br><span class="small muted">Magasság, súly, életkor és nem alapján kiszámoljuk a napi szükségletedet</span></span><span class="chev">›</span></button>`
+         :`<button class="linkrow" data-tabgo2="profil">${ICO.user}<span class="tx"><b class="num">${balance>=0?`${balance} kcal hiány`:`${-balance} kcal többlet`} a menü szerint</b><br><span class="small muted num">Szükséglet ${goal} kcal, a mai menü ${menu} kcal</span></span><span class="chev">›</span></button>`}
+       <button class="linkrow" data-shopweek="${wi}">${ICO.cart}<span class="tx"><b>${wi+1}. heti bevásárlólista</b><br><span class="small muted">Pontos mennyiségek, kipipálható</span></span><span class="chev">›</span></button>
+     </div>
+   </section>
+
+   <h2 class="sec-title">Mai étkezések</h2>
+   ${mealCards}
+
+   <h2 class="sec-title">Mozgás, elégetett kalória</h2>
+   <section class="card stack" style="gap:12px">
+     ${burnList?`<div>${burnList}</div>`:`<p class="small muted">Még nincs felvéve mozgás erre a napra. Az itt megadott kalória hozzáadódik a napi keretedhez.</p>`}
+     <form class="burnform" id="burnForm">
+       <label class="sr" for="burnLabel">Mozgás megnevezése</label>
+       <input type="text" id="burnLabel" placeholder="Pl. séta, jóga" maxlength="40">
+       <span class="qin"><label class="sr" for="burnKcal">Elégetett kalória</label><input type="number" id="burnKcal" inputmode="numeric" min="1" step="1" placeholder="0" required><span class="u">kcal</span></span>
+       <button class="btn primary" type="submit">Hozzáadás</button>
+     </form>
+   </section>
+
+   <h2 class="sec-title">Tünetnapló</h2>
+   <section class="card stack" style="gap:8px"><label class="small muted" for="note">Puffadás, fájdalom, széklet, energiaszint – ${DN[di].toLowerCase()}, ${fmtDate(dateOf(i))}</label>
+     <textarea id="note" data-note="${i}" placeholder="Pl. délután enyhe puffadás, széklet rendben…">${esc(S.notes[i]||"")}</textarea></section>
+
+   <h2 class="sec-title">6 hetes haladás</h2>
+   <section class="card stack">
+     <div class="spread"><p class="small muted">${status}</p>
+       <label class="small muted row" for="startDate">Kezdés <input type="date" id="startDate" value="${S.start}"></label></div>
+     <div class="grid6">${grid}</div>
+     <div class="spread"><div class="legend"><span><i style="background:var(--elim-soft)"></i>Elimináció</span><span><i style="background:var(--reint-soft)"></i>Reintrodukció</span><span><i style="background:var(--reint);border-radius:50%"></i>Tesztnap</span></div>
+       <span class="small num"><b>${doneDays}</b>/42 nap kész</span></div>
+     <div class="pbar"><span style="width:${doneDays/42*100}%"></span></div>
+   </section>
+  </div></div>`;
+}
+
+function vProfil(){
+  const p=S.profile||{sex:"",age:"",height:"",weight:"",act:1.2};
+  const b=bmr(S.profile),need=baseNeed(S.profile);
+  const wi=Math.floor(clamp(todayIdx())/7);
+  const avgMenu=Math.round(PLAN[wi].days.reduce((s,_,d)=>s+dayKcal(wi*7+d),0)/7);
+  const bmi=S.profile?S.profile.weight/Math.pow(S.profile.height/100,2):null;
+  const bmiTxt=bmi==null?"":bmi<18.5?"sovány":bmi<25?"normál":bmi<30?"túlsúly":"elhízás";
+  const res=S.profile?`<section class="card stack">
+      <h3>Az eredményeid</h3>
+      <div class="stats">
+        <div class="stat"><span class="eyebrow">Alapanyagcsere</span><b class="num">${b}</b><span class="small muted">kcal / nap, nyugalomban</span></div>
+        <div class="stat"><span class="eyebrow">Napi szükséglet</span><b class="num">${need}</b><span class="small muted">kcal, a mozgás nélkül</span></div>
+        <div class="stat"><span class="eyebrow">BMI</span><b class="num">${bmi.toFixed(1).replace(".",",")}</b><span class="small muted">${bmiTxt}</span></div>
+      </div>
+      <p class="small muted num">A ${wi+1}. heti menü átlagosan ${avgMenu} kcal/nap, ez napi kb. <b>${Math.abs(need-avgMenu)} kcal ${need>=avgMenu?"hiány":"többlet"}</b> a szükségletedhez képest${need>=avgMenu?` (heti kb. ${String(((need-avgMenu)*7/7700).toFixed(2)).replace(".",",")} kg zsírnak megfelelő)`:""}. A napi mozgásodat a Ma oldalon viheted fel, az hozzáadódik a keretedhez.</p>
+      <p class="small muted">Számítás: Mifflin–St Jeor képlet (10 × testsúly + 6,25 × magasság − 5 × életkor ${p.sex==="m"?"+ 5":"− 161"}), a napi szükséglet ennek és az aktivitási szorzónak (${String(p.act).replace(".",",")}) a szorzata. Tájékoztató érték, nem orvosi adat.</p>
+    </section>`:`<section class="card"><p class="muted">Töltsd ki az adataidat, és kiszámoljuk az alapanyagcserédet és a napi kalóriaszükségletedet.</p></section>`;
+  return `<div class="stack">
+    <form class="card stack" id="profForm">
+      <h3>Saját adatok</h3>
+      <fieldset class="seg" style="margin:0"><legend class="sr">Nem</legend>
+        <label><input type="radio" name="sex" value="f" ${p.sex==="f"?"checked":""} required><span>Nő</span></label>
+        <label><input type="radio" name="sex" value="m" ${p.sex==="m"?"checked":""}><span>Férfi</span></label></fieldset>
+      <div class="pgrid">
+        <label for="pAge">Életkor<span class="qin"><input type="number" id="pAge" min="14" max="100" step="1" inputmode="numeric" value="${p.age}" required><span class="u">év</span></span></label>
+        <label for="pHeight">Magasság<span class="qin"><input type="number" id="pHeight" min="120" max="230" step="1" inputmode="numeric" value="${p.height}" required><span class="u">cm</span></span></label>
+        <label for="pWeight">Testsúly<span class="qin"><input type="number" id="pWeight" min="30" max="250" step="0.1" inputmode="decimal" value="${p.weight}" required><span class="u">kg</span></span></label>
+      </div>
+      <fieldset class="acts"><legend class="eyebrow">Aktivitás (a külön felvitt mozgás nélkül)</legend>
+        ${ACT.map(([v,l,d])=>`<label class="act"><input type="radio" name="act" value="${v}" ${+p.act===v?"checked":""}><span><b>${l}</b><br><span class="small muted">${d} · ×${String(v).replace(".",",")}</span></span></label>`).join("")}
+      </fieldset>
+      <button class="btn primary" type="submit" style="align-self:flex-start">Mentés</button>
+    </form>
+    ${res}
+  </div>`;
+}
+
+function heroSlim(title,sub){return `<header class="hero slim"><div class="hero-in"><div class="topbar"><span></span><span class="brand">Reizdarm</span><span></span></div><div><h1>${title}</h1>${sub?`<p style="opacity:.85">${sub}</p>`:""}</div></div></header>`}
+
+function vHet(){
+  if(UI.week===null)UI.week=Math.floor(clamp(todayIdx())/7);
+  const wi=UI.week,W=PLAN[wi];
+  const chips=PLAN.map((w,x)=>`<button class="chip" data-week="${x}" aria-pressed="${x===wi}"><span class="dot" style="background:var(--${w.ph})"></span>${x+1}. hét</button>`).join("");
+  const ks=W.days.map((_,di)=>dayKcal(wi*7+di)),avg=Math.round(ks.reduce((a,b)=>a+b)/7);
+  const ids=new Set();W.days.forEach(x=>MEALS.forEach(([m])=>ids.add(x[m])));
+  const newR=[...ids].filter(id=>R[id].w===wi+1).length;
+  const tests=W.days.filter(x=>x.tst).length;
+  const done=W.days.filter((_,x)=>dayDone(wi*7+x)).length;
+  const hi=Math.max(2000,...ks);
+  const bars=ks.map((k,di)=>`<div class="col"><small class="num">${k}</small><span style="height:${Math.round(k/hi*60)}px"></span><small>${DS[di]}</small></div>`).join("");
+  const rows=W.days.map((x,di)=>{const i=wi*7+di;
+    return `<div class="wday"><div class="dn"><button data-go="${i}" data-tabgo="nap">${DS[di]}</button><div class="small muted num">${fmtDate(dateOf(i))}</div>
+      <div class="small muted num">~${ks[di]} kcal</div>${dayDone(i)?'<span class="pill elim" style="margin-top:4px">Kész</span>':""}</div>
+      <div class="stack" style="gap:8px">${x.tst?`<div class="row"><span class="pill reint">Teszt</span><button class="dish" style="font-size:.9rem" data-r="${x.tst}">${esc(R[x.tst].n)}</button></div>`:x.note?`<p class="small muted">${esc(x.note)}</p>`:""}
+      <div class="wmeals">${MEALS.map(([m,l])=>`<div class="m"><div class="eyebrow">${l} · <span class="num">${mealKcal(x[m],mk(i,m))}</span>${mealEdit(x[m],mk(i,m))?" ✎":""}</div><button class="dish" data-r="${x[m]}" data-ctx="${mk(i,m)}">${esc(R[x[m]].n)}</button></div>`).join("")}</div></div></div>`}).join("");
+  return `<div class="stack">
+    <div class="chips" role="group" aria-label="Hét kiválasztása">${chips}</div>
+    <section class="card stack">
+      <div class="spread"><div><span class="pill ${W.ph}">${phaseLbl(W.ph)}</span><h2 style="margin-top:6px">${wi+1}. hét · ${esc(W.t.split("– ")[1])}</h2></div>
+        <span class="small muted num">${fmtDate(dateOf(wi*7))} – ${fmtDate(dateOf(wi*7+6))}</span></div>
+      <p class="muted">${esc(W.g)}</p>
+      <div class="stats">
+        <div class="stat"><span class="eyebrow">Átlag</span><b class="num">~${avg}</b><span class="small muted">kcal / nap</span></div>
+        <div class="stat"><span class="eyebrow">${tests?"Tesztek":"Új receptek"}</span><b class="num">${tests||newR}</b><span class="small muted">${tests?"tesztnap":"ezen a héten"}</span></div>
+        <div class="stat"><span class="eyebrow">Haladás</span><b class="num">${done}/7</b><span class="small muted">nap kész</span></div>
+      </div>
+      <div><div class="eyebrow" style="margin-bottom:4px">Napi kalória</div><div class="kbar ${W.ph}">${bars}</div></div>
+      <button class="linkbtn" data-shopweek="${wi}" style="align-self:flex-start">A heti bevásárlólista megnyitása →</button>
+    </section>
+    <section class="card">${rows}</section></div>`;
+}
+
+function vReceptek(){
+  const q=UI.q.trim().toLowerCase();
+  const filt=[["all","Mind"],["b","Reggeli"],["m","Főétel"],["s","Snack"],["t","Teszt"]];
+  const chips=filt.map(([k,l])=>`<button class="chip" data-filter="${k}" aria-pressed="${UI.filter===k}">${l}</button>`).join("");
+  const groups=["b","m","s","t"].filter(t=>UI.filter==="all"||UI.filter===t).map(t=>{
+    const items=Object.entries(R).filter(([id,r])=>r.t===t&&(!q||r.n.toLowerCase().includes(q)||r.ing.some(([k])=>I[k][0].toLowerCase().includes(q))))
+      .sort((a,b)=>a[1].w-b[1].w||a[1].n.localeCompare(b[1].n,"hu"));
+    if(!items.length)return "";
+    return `<section class="card"><div class="spread" style="margin-bottom:6px"><h3>${T[t]}</h3><span class="small muted num">${items.length} recept</span></div><div class="rlist">
+      ${items.map(([id,r])=>`<button class="ritem" data-r="${id}"><span><span class="n">${esc(r.n)}</span><br><span class="small muted"><span class="num">~${recipeKcal(id)} kcal</span> · ${r.w}. héttől · ${(OCC[id]||[]).length}× a tervben${S.rEdit[id]?" · saját alap ✎":""}</span></span><span class="muted" aria-hidden="true">›</span></button>`).join("")}</div></section>`}).join("");
+  return `<div class="stack">
+    <input type="search" id="rq" placeholder="Keresés név vagy hozzávaló szerint (pl. lazac)" value="${esc(UI.q)}" aria-label="Recept keresése">
+    <div class="chips" role="group" aria-label="Szűrés">${chips}</div>
+    ${groups||'<p class="muted">Nincs találat erre a keresésre.</p>'}</div>`;
+}
+
+function vBevasarlas(){
+  if(UI.shopWeek===null)UI.shopWeek=Math.floor(clamp(todayIdx())/7);
+  const wi=UI.shopWeek,tot=weekTotals(wi);
+  const chips=PLAN.map((w,x)=>`<button class="chip" data-sw="${x}" aria-pressed="${x===wi}"><span class="dot" style="background:var(--${w.ph})"></span>${x+1}. hét</button>`).join("");
+  const keys=Object.keys(tot);
+  const got=keys.filter(k=>S.shop[wi+":"+k]).length;
+  const cats=Object.keys(CATS).map(c=>{
+    const ks=keys.filter(k=>I[k][2]===c).sort((a,b)=>I[a][0].localeCompare(I[b][0],"hu"));
+    if(!ks.length)return "";
+    return `<section class="card cat"><h3 style="margin-bottom:4px">${CATS[c]}</h3>${ks.map(k=>{
+      const [n,u]=I[k],a=tot[k],g=!!S.shop[wi+":"+k];
+      const piece=!["g","ml"].includes(u);const buy=piece&&Math.abs(a-Math.round(a))>1e-9?`<small>vegyél ${Math.ceil(a)} ${u}</small>`:"";
+      const eggs=k==="tojas"?`<small>≈ ${Math.ceil(a/10)} × 10-es doboz</small>`:"";
+      return `<label class="shop ${g?"got":""}"><input type="checkbox" data-shop="${wi}:${k}" ${g?"checked":""}><span class="nm">${esc(n)}</span><span class="amt">${fmtQ(a,u)}${buy}${eggs}</span></label>`}).join("")}</section>`}).join("");
+  const extra=(EXTRA[wi+1]||[]).map(x=>`<li>${esc(x)}</li>`).join("");
+  return `<div class="stack">
+    <div class="chips" role="group" aria-label="Hét kiválasztása">${chips}</div>
+    <section class="card stack">
+      <div class="spread"><div><span class="pill ${PLAN[wi].ph}">${wi+1}. hét</span><h2 style="margin-top:6px">Bevásárlólista</h2></div>
+        <span class="num"><b>${got}</b>/${keys.length} megvéve</span></div>
+      <div class="bar"><span style="width:${keys.length?got/keys.length*100:0}%"></span></div>
+      <p class="small muted">A mennyiségek a hét mind a 21 étkezésének, 7 snackjének${wi>=4?" és a tesztételeknek":""} pontos összegei, 1 főre. A rizs, quinoa és tészta nyers súlyban értendő. Só, bors ízlés szerint.${wi>=4?" Az alapmenü a 4. hét mintáját követi.":""}</p>
+      ${extra?`<ul class="tips small">${extra}</ul>`:""}
+      <button class="btn" data-shopreset="${wi}" style="align-self:flex-start">Pipák törlése</button>
+    </section>
+    ${cats}</div>`;
+}
+
+function vInfo(){
+  return `<div class="stack">
+   <section class="card stack"><h2>A terv felépítése</h2>
+    <p>A 6 hetes terv alacsony FODMAP és fruktózszegény elveken alapul, hogy enyhítse a reizdarm tüneteit enyhe fruktózintolerancia mellett. Napi kb. 1400–1600 kcal: mérsékelt tartomány, elsősorban tünetkezelésre összeállítva.</p>
+    <div class="phase"><span class="sw" style="background:var(--elim)"></span><div><h3>1–4. hét · Elimináció</h3><p class="small muted">A problémás anyagok szinte teljes kizárása, fokozatos stabilizálódás. Ha 4 hét után jelentősen javultak a tüneteid, jó úton jársz.</p></div></div>
+    <div class="phase"><span class="sw" style="background:var(--reint)"></span><div><h3>5–6. hét · Reintrodukció</h3><p class="small muted">Egyes ételcsoportok óvatos visszaépítése: fruktóz (alma, méz, mangó/körte), majd hagyma-fokhagyma és laktóz. Naponta legfeljebb egy új anyag, köztük kiürülési napokkal.</p></div></div>
+   </section>
+   <section class="card stack"><h3>Így tesztelj</h3><ul class="tips">
+    <li>Minden tesztet reggeli után kb. 2 órával végezz, más magas fruktóz- vagy FODMAP-tartalmú étel nélkül.</li>
+    <li>A következő 24 órában figyeld: puffadás, hasi fájdalom, székletváltozás. Írd a Nap nézet jegyzet mezőjébe.</li>
+    <li>Új tesztet csak tünetmentes alapállapotból kezdj.</li></ul></section>
+   <section class="card stack"><h3>A 6 hét után</h3><ul class="tips">
+    <li>Legyen egy személyes listád arról, mely ételeket bírod jól, és melyeket érdemes csak ritkán vagy kis adagban enni.</li>
+    <li>Nem kell örökre alacsony FODMAP-on maradnod. A cél a saját triggereid azonosítása, utána rugalmasan, de tudatosan étkezhetsz.</li>
+    <li>Dietetikussal együtt végigcsinálva a folyamat pontosabb és biztonságosabb, különösen a reintrodukciós szakaszban.</li></ul></section>
+   <section class="card stack" style="border-color:var(--reint)"><h3>Mikor fordulj orvoshoz</h3><ul class="tips">
+    <li>Ha 4 hét elimináció után sem javulnak érdemben a tüneteid: érdemes más okot is kizárni (pl. laktózintolerancia, gluténérzékenység, gyulladásos bélbetegség).</li>
+    <li>Ha egy teszt során erős vagy tartós tünetet tapasztalsz (pl. jelentős hasi fájdalom, véres széklet), ne folytasd a tesztelést, és keress orvosi tanácsot.</li></ul></section>
+   <section class="card stack"><h3>Mennyiségek és kalória</h3><ul class="tips">
+    <li>Bármelyik étkezésnél a kalóriára (✎) vagy az étel nevére koppintva átírhatod a hozzávalók mennyiségét és a kalóriát, majd a <b>Mentés</b> gombbal (vagy Enterrel) jóváhagyod. Mentés nélkül bezárva nem változik semmi.</li>
+    <li><b>Csak erre a napra:</b> ha egyszer több alapanyagból főzöl. <b>Minden napra:</b> ha a recept alapadagját akarod tartósan megváltoztatni.</li>
+    <li>A kalória átlagos tápérték-adatokból, a nyers súlyból számolódik. Ha pontosabb értéked van (pl. a csomagolásról), írd át kézzel.</li>
+    <li>A heti bevásárlólista mindig a módosított mennyiségekkel számol.</li></ul></section>
+   <section class="card stack"><h3>Napi keret</h3><ul class="tips">
+    <li>A Profil fülön megadott adataidból (nem, életkor, magasság, testsúly, aktivitás) számoljuk az alapanyagcserédet és a napi szükségletedet.</li>
+    <li>A Ma oldalon felvitt mozgás kalóriája hozzáadódik az aznapi kerethez. A gyűrű közepe azt mutatja, mennyi fér még bele a keretbe.</li></ul></section>
+   <p class="small muted">A pipák, jegyzetek és módosítások csak ebben a böngészőben tárolódnak.</p>
+  </div>`;
+}
+
+/* ---------- Recept lap (szerkeszthető, Mentés gombbal) ---------- */
+let SH=null; // {id, ctx, scope, draft:{ing:{k:v}, kcal:null|number}}
+const STEP={g:5,ml:10,db:.25,fej:.25,szelet:.5,adag:.25,ek:.5,tk:.5,csipet:1};
+const ctxLabel=c=>{const [i,m]=c.split(":");const n=+i;const l=m==="tst"?"Teszt":MEALS.find(x=>x[0]===m)[1];return `${Math.floor(n/7)+1}. hét ${DN[n%7].toLowerCase()} · ${l.toLowerCase()}`};
+const same=(a,b)=>Math.abs(a-b)<1e-9;
+const numStr=a=>String(Math.round(a*100)/100);
+function shRef(){return SH.scope==="day"?recipeAmounts(SH.id):R[SH.id].ing}           // amihez képest "módosított"
+function shStored(){return SH.scope==="day"?mealAmounts(SH.id,SH.ctx):recipeAmounts(SH.id)} // ami most el van mentve
+function shStoredKcal(){const e=SH.scope==="day"?mealEdit(SH.id,SH.ctx):S.rEdit[SH.id];return e&&e.kcal!=null?e.kcal:null}
+function initDraft(){SH.draft={ing:Object.fromEntries(shStored()),kcal:shStoredKcal()}}
+const draftAmts=()=>R[SH.id].ing.map(([k])=>[k,SH.draft.ing[k]]);
+function draftAuto(){const c=calc(draftAmts());
+  if(SH.scope==="day"){const r=S.rEdit[SH.id];if(r&&r.kcal!=null){const b=calc(recipeAmounts(SH.id));return b?Math.round(r.kcal*c/b):r.kcal}}
+  return c}
+const draftKcal=()=>SH.draft.kcal!=null?SH.draft.kcal:draftAuto();
+function dirty(){const st=Object.fromEntries(shStored());
+  return R[SH.id].ing.some(([k])=>!same(st[k],SH.draft.ing[k]))||shStoredKcal()!==SH.draft.kcal}
+function commit(){
+  const ref=Object.fromEntries(shRef()),ing={};
+  R[SH.id].ing.forEach(([k])=>{const v=SH.draft.ing[k];if(!same(v,ref[k]))ing[k]=v});
+  const has=Object.keys(ing).length||SH.draft.kcal!=null;
+  if(SH.scope==="day"){if(has)S.mEdit[SH.ctx]={id:SH.id,ing,kcal:SH.draft.kcal};else delete S.mEdit[SH.ctx]}
+  else{if(has)S.rEdit[SH.id]={ing,kcal:SH.draft.kcal};else delete S.rEdit[SH.id]}
+  save();render();
+}
+
+function openRecipe(id,ctx){SH={id,ctx:ctx||null,scope:ctx?"day":"base"};initDraft();renderSheet();$("#sheet .sheet .iconbtn").focus()}
+function renderSheet(){
+  const {id,ctx}=SH,r=R[id],occ=OCC[id]||[],ref=Object.fromEntries(shRef()),manual=SH.draft.kcal!=null;
+  const sh=$("#sheet");
+  sh.innerHTML=`<div class="sheet-bg" data-close><div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="rt">
+    <div class="spread"><span class="pill ${r.t==="t"?"reint":"elim"}">${T[r.t]} · ${r.w}. héttől</span><button class="iconbtn" data-close aria-label="Bezárás">✕</button></div>
+    <h2 id="rt">${esc(r.n)}</h2>
+    ${ctx?`<div class="seg" role="group" aria-label="Mire vonatkozzon a módosítás">
+      <button data-scope="day" aria-pressed="${SH.scope==="day"}">Csak erre a napra</button>
+      <button data-scope="base" aria-pressed="${SH.scope==="base"}">Minden napra (alaprecept)</button></div>`:""}
+    <p class="small muted">${SH.scope==="day"?`A módosítás csak erre az étkezésre vonatkozik: <b>${ctxLabel(ctx)}</b>.`:"A módosítás minden olyan napra vonatkozik, ahol ez a recept szerepel (kivéve, ahol egy napot külön átírtál)."} Írd át az értékeket, majd nyomd meg a <b>Mentés</b> gombot.</p>
+    <div class="kbox">
+      <label for="kcalIn" class="eyebrow">Kalória / adag</label>
+      <div class="row"><input type="number" id="kcalIn" inputmode="numeric" min="0" step="10" value="${draftKcal()}" class="${manual?"mod":""}"><span>kcal</span>
+        <span class="small muted" id="kcalAuto"></span>
+        <button class="linkbtn small" data-kauto id="kauto" ${manual?"":"hidden"}>Vissza a számoltra</button></div>
+    </div>
+    <div><div class="eyebrow" style="margin-bottom:4px">Hozzávalók · 1 adag</div>
+      <table class="ing">${R[id].ing.map(([k])=>{const a=SH.draft.ing[k],o=ref[k],u=I[k][1],ch=!same(a,o);
+        return `<tr><td><label for="q_${k}">${esc(I[k][0])}</label><div class="small muted" id="o_${k}" ${ch?"":"hidden"}>eredeti: ${fmtQ(o,u)}</div></td>
+        <td class="q"><span class="qin"><input type="number" id="q_${k}" data-amt="${k}" inputmode="decimal" min="0" step="${STEP[u]||1}" value="${numStr(a)}" class="${ch?"mod":""}"><span class="u">${u}</span></span></td></tr>`}).join("")}
+        ${r.x?`<tr><td>${esc(r.x[0].toUpperCase()+r.x.slice(1))}</td><td class="q muted">ízlés szerint</td></tr>`:""}</table>
+      <button class="linkbtn small" data-sreset id="sreset" style="margin-top:10px">Eredeti értékek visszaírása</button></div>
+    <div class="savebar"><span class="small" id="dirtyTxt" aria-live="polite"></span>
+      <div class="row"><button class="btn" data-cancel id="cancelBtn">Mégse</button><button class="btn primary" data-save id="saveBtn">Mentés</button></div></div>
+    <div><div class="eyebrow" style="margin-bottom:6px">Elkészítés</div><ol class="steps">${r.st.map(s=>`<li>${esc(s)}</li>`).join("")}</ol>
+      ${r.note?`<p class="small muted" style="margin-top:8px">${esc(r.note)}</p>`:""}</div>
+    ${occ.length?`<div><div class="eyebrow" style="margin-bottom:6px">A tervben ${occ.length}×</div><div class="occ">${occ.map(o=>`<button class="chip" data-go="${o.i}" data-tabgo="nap">${Math.floor(o.i/7)+1}. hét ${DS[o.i%7]} · ${o.l}</button>`).join("")}</div></div>`:""}
+  </div></div>`;
+  sh.hidden=false;
+  sheetLive();
+}
+/* élő frissítés gépelés közben (a fókusz marad az inputban) */
+function sheetLive(){
+  const ref=Object.fromEntries(shRef()),manual=SH.draft.kcal!=null,d=dirty();
+  R[SH.id].ing.forEach(([k])=>{const ch=!same(SH.draft.ing[k],ref[k]),inp=document.getElementById("q_"+k),o=document.getElementById("o_"+k);
+    if(inp)inp.classList.toggle("mod",ch);if(o)o.hidden=!ch});
+  const kin=$("#kcalIn");if(kin){if(!manual&&document.activeElement!==kin)kin.value=draftAuto();kin.classList.toggle("mod",manual)}
+  $("#kcalAuto").textContent=manual?`kézzel megadva · számolt: ${draftAuto()} kcal`:"a mennyiségekből számolva";
+  $("#kauto").hidden=!manual;
+  const anyMod=R[SH.id].ing.some(([k])=>!same(SH.draft.ing[k],ref[k]))||manual;
+  $("#sreset").hidden=!anyMod;
+  $("#saveBtn").disabled=!d;
+  $("#dirtyTxt").textContent=d?"Nem mentett módosítás":"Minden mentve";
+  $("#dirtyTxt").className="small "+(d?"warn":"muted");
+}
+function closeSheet(){const sh=$("#sheet");sh.hidden=true;sh.innerHTML="";SH=null}
+let toastT;
+function toast(msg){let t=$("#toast");if(!t){t=document.createElement("div");t.id="toast";t.setAttribute("role","status");document.body.appendChild(t)}
+  t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2200)}
+
+/* ---------- Router ---------- */
+const VIEWS={nap:vNap,het:vHet,receptek:vReceptek,bevasarlas:vBevasarlas,info:vInfo,profil:vProfil};
+function tab(){const h=location.hash.slice(1);return VIEWS[h]?h:"nap"}
+function render(keepFocus){
+  const t=tab();
+  document.querySelectorAll("nav.tabs a").forEach(a=>a.setAttribute("aria-current",a.dataset.tab===t?"page":"false"));
+  const ti=todayIdx();
+  const HT={het:["Heti bontás","Menü, kalória és haladás hétről hétre"],receptek:["Receptek","Koppints egy receptre a mennyiségek szerkesztéséhez"],bevasarlas:["Bevásárlólista","Hetente, pontos mennyiségekkel"],info:["Tudnivalók","A terv felépítése és a tesztek szabályai"],profil:["Profil","Saját adatok és napi kalóriaszükséglet"]};
+  $("#view").innerHTML=t==="nap"?vNap():heroSlim(...HT[t])+`<div class="wrap"><div class="lift">${VIEWS[t]()}</div></div>`;
+  if(keepFocus){const el=document.getElementById(keepFocus);if(el){el.focus();const v=el.value;el.value="";el.value=v}}
+}
+function go(t){if(tab()===t)render();else location.hash=t;window.scrollTo({top:0})}
+window.addEventListener("hashchange",()=>{render();window.scrollTo({top:0})});
+
+document.addEventListener("click",e=>{
+  const el=e.target.closest("[data-r],[data-scope],[data-kauto],[data-sreset],[data-save],[data-cancel],[data-tabgo2],[data-burndel],[data-go],[data-week],[data-sw],[data-filter],[data-shopweek],[data-shopreset],[data-close]");
+  if(!el)return;
+  if(el.hasAttribute("data-close")){if(e.target===el||el.classList.contains("iconbtn"))closeSheet();return}
+  if(el.dataset.r){e.preventDefault();openRecipe(el.dataset.r,el.dataset.ctx);return}
+  if(el.dataset.scope){SH.scope=el.dataset.scope;renderSheet();return}
+  if(el.hasAttribute("data-kauto")){SH.draft.kcal=null;renderSheet();return}
+  if(el.hasAttribute("data-sreset")){SH.draft={ing:Object.fromEntries(shRef()),kcal:null};renderSheet();return}
+  if(el.hasAttribute("data-save")){const sc=SH.scope;commit();closeSheet();toast(sc==="day"?"Mentve erre a napra":"Mentve minden napra");return}
+  if(el.hasAttribute("data-cancel")){closeSheet();return}
+  if(el.dataset.tabgo2){go(el.dataset.tabgo2);return}
+  if(el.dataset.burndel!==undefined){const a=S.burn[UI.sel]||[];a.splice(+el.dataset.burndel,1);if(!a.length)delete S.burn[UI.sel];save();render();return}
+  if(el.dataset.go!==undefined){UI.sel=clamp(+el.dataset.go);UI.week=Math.floor(UI.sel/7);closeSheet();if(el.dataset.tabgo)go(el.dataset.tabgo);else render();return}
+  if(el.dataset.week!==undefined){UI.week=+el.dataset.week;render();return}
+  if(el.dataset.sw!==undefined){UI.shopWeek=+el.dataset.sw;render();return}
+  if(el.dataset.filter){UI.filter=el.dataset.filter;render();return}
+  if(el.dataset.shopweek!==undefined){UI.shopWeek=+el.dataset.shopweek;go("bevasarlas");return}
+  if(el.dataset.shopreset!==undefined){const w=el.dataset.shopreset;Object.keys(S.shop).forEach(k=>{if(k.startsWith(w+":"))delete S.shop[k]});save();render();return}
+});
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.dataset.chk){if(t.checked)S.done[t.dataset.chk]=1;else delete S.done[t.dataset.chk];save();render();return}
+  if(t.dataset.shop){if(t.checked)S.shop[t.dataset.shop]=1;else delete S.shop[t.dataset.shop];save();render();return}
+  if(t.id==="startDate"&&t.value){S.start=t.value;S.startSet=1;UI.sel=null;UI.week=null;UI.shopWeek=null;save();render()}
+});
+document.addEventListener("input",e=>{
+  const t=e.target;
+  if(t.dataset.note!==undefined){if(t.value.trim())S.notes[t.dataset.note]=t.value;else delete S.notes[t.dataset.note];save()}
+  if(t.id==="rq"){UI.q=t.value;render("rq")}
+  if(SH&&t.dataset.amt){const v=parseFloat(String(t.value).replace(",","."));
+    SH.draft.ing[t.dataset.amt]=isNaN(v)||v<0?Object.fromEntries(shRef())[t.dataset.amt]:v;sheetLive()}
+  if(SH&&t.id==="kcalIn"){const v=parseInt(t.value,10);SH.draft.kcal=isNaN(v)?null:v;sheetLive()}
+});
+document.addEventListener("submit",e=>{
+  const f=e.target;e.preventDefault();
+  if(f.id==="burnForm"){const k=parseInt($("#burnKcal").value,10);if(!(k>0))return;
+    (S.burn[UI.sel]=S.burn[UI.sel]||[]).push({kcal:k,label:$("#burnLabel").value.trim()});save();render();toast(`+${k} kcal hozzáadva`);return}
+  if(f.id==="profForm"){const sex=(f.querySelector('input[name=sex]:checked')||{}).value,act=parseFloat((f.querySelector('input[name=act]:checked')||{}).value||"1.2");
+    const age=+$("#pAge").value,height=+$("#pHeight").value,weight=parseFloat(String($("#pWeight").value).replace(",","."));
+    if(!sex||!age||!height||!weight)return;
+    S.profile={sex,age,height,weight,act};save();render();toast("Adatok mentve");return}
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"&&!$("#sheet").hidden)closeSheet();
+  if(e.key==="Enter"&&SH&&(e.target.dataset.amt||e.target.id==="kcalIn")&&dirty()){e.preventDefault();$("#saveBtn").click()}
+});
+render();
+</script>
