@@ -556,12 +556,7 @@ function vNap(){
   <div class="wrap"><div class="stack">
    <section class="card lift">
      <div class="macros">${macroHtml}</div>
-     <div style="margin-top:16px">
-       ${infoRow}
-       ${base==null?`<button class="linkrow" data-tabgo2="profil">${ICO.user}<span class="tx"><b>Add meg az adataidat</b><br><span class="small muted">Magasság, súly, életkor és nem alapján kiszámoljuk a napi szükségletedet</span></span><span class="chev">›</span></button>`
-         :`<button class="linkrow" data-tabgo2="profil">${ICO.user}<span class="tx"><b class="num">${balance>=0?`${balance} kcal hiány`:`${-balance} kcal többlet`} a menü szerint</b><br><span class="small muted num">Szükséglet ${goal} kcal, a mai menü ${menu} kcal</span></span><span class="chev">›</span></button>`}
-       <button class="linkrow" data-shopweek="${wi}">${ICO.cart}<span class="tx"><b>${wi+1}. heti bevásárlólista</b><br><span class="small muted">Pontos mennyiségek, kipipálható</span></span><span class="chev">›</span></button>
-     </div>
+     ${D.tst||D.note?`<div style="margin-top:16px">${infoRow}</div>`:""}
    </section>
 
    <h2 class="sec-title">Mai étkezések</h2>
