@@ -538,7 +538,7 @@ function vNap(){
   return `<header class="hero"><div class="hero-in">
     <div class="topbar">
       <button class="hbtn" data-go="${clamp(ti)}" aria-label="Ugrás a mai napra">${ICO.cal}Ma</button>
-      <span class="brand">Reizdarm</span>
+      <span></span>
       <span class="r hpill">${wi+1}. hét · ${phaseLbl(W.ph)}</span>
     </div>
     <div class="ringrow">
@@ -631,7 +631,7 @@ function vProfil(){
   </div>`;
 }
 
-function heroSlim(title,sub){return `<header class="hero slim"><div class="hero-in"><div class="topbar"><span></span><span class="brand">Reizdarm</span><span></span></div><div><h1>${title}</h1>${sub?`<p style="opacity:.85">${sub}</p>`:""}</div></div></header>`}
+function heroSlim(title,sub){return `<header class="hero slim"><div class="hero-in"><div><h1>${title}</h1>${sub?`<p style="opacity:.85">${sub}</p>`:""}</div></div></header>`}
 
 function vHet(){
   if(UI.week===null)UI.week=Math.floor(clamp(todayIdx())/7);
